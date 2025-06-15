@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Map Lokasi Saya</title>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+  <style>
+    #map { height: 100vh; }
+    body { margin: 0; font-family: sans-serif; }
+    #info { position: absolute; top: 10px; left: 10px; background: white; padding: 5px 10px; z-index: 1000; border-radius: 5px; box-shadow: 0 2px 6px rgba(0,0,0,0.2); }
+  </style>
+</head>
+<body>
+  <div id="info">📍 Menunggu lokasi...</div>
+  <div id="map"></div>
+
+  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+  <script>
+    var map = L.map('map').setView([0, 0], 2); // Default view sebelum tahu posisi
+
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '© OpenStreetMap'
+    }).addTo(map);
+
+    // Ambil lokasi pengguna
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(function(position) {
+        var lat = position.coords.latitude;
+        var lng = position.coords.longitude;
+        map.setView([lat, lng], 15); // Zoom ke lokasi pengguna
+        L.marker([lat, lng]).addTo(map)
+          .bindPopup("Ini lokasi kamu").openPopup();
+        document.getElementById("info").innerText = `📍 Lokasi Kamu: ${lat.toFixed(5)}, ${lng.toFixed(5)}`;
+      }, function(error) {
+        document.getElementById("info").innerText = "❌ Gagal mendapatkan lokasi: " + error.message;
+      });
+    } else {
+      document.getElementById("info").innerText = "❌ Browser tidak mendukung Geolocation";
+    }
+  </script>
+</body>
+</html>
