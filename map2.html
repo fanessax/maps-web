@@ -1,56 +1,46 @@
 <!DOCTYPE html>
 <html>
-  <head>
-    <title>Lokasiku Sekarang</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <style>
-      html, body, #map {
-        height: 100%;
-        margin: 0;
-        padding: 0;
-      }
-    </style>
-    <!-- Leaflet.js untuk peta -->
-    <link
-      rel="stylesheet"
-      href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
-    />
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-  </head>
-  <body>
-    <div id="map"></div>
+<head>
+  <title>Lokasiku dari Thunkable</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <style>
+    html, body, #map {
+      height: 100%;
+      margin: 0;
+      padding: 0;
+    }
+  </style>
+  <link
+    rel="stylesheet"
+    href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+  />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+</head>
+<body>
+  <div id="map"></div>
 
-    <script>
-      // Buat map dan tampilkan seluruh dunia
-      var map = L.map("map").setView([0, 0], 2); // Koordinat 0,0 zoom 2
+  <script>
+    // Ambil parameter dari URL
+    const urlParams = new URLSearchParams(window.location.search);
+    const lat = parseFloat(urlParams.get('lat'));
+    const lng = parseFloat(urlParams.get('lng'));
 
-      // Tambahkan tile layer dari OpenStreetMap
-      L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-        attribution: '&copy; OpenStreetMap contributors',
-      }).addTo(map);
+    // Buat map
+    const map = L.map("map").setView([0, 0], 2); // default view
 
-      // Cek lokasi pengguna (dengan izin browser)
-      if (navigator.geolocation) {
-        navigator.geolocation.getCurrentPosition(
-          function (position) {
-            var lat = position.coords.latitude;
-            var lng = position.coords.longitude;
+    // Tambahkan tile
+    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+      attribution: '&copy; OpenStreetMap contributors'
+    }).addTo(map);
 
-            // Update map ke lokasi pengguna
-            map.setView([lat, lng], 15);
-
-            // Tambahkan marker
-            L.marker([lat, lng]).addTo(map)
-              .bindPopup("Kamu di sini! 📍")
-              .openPopup();
-          },
-          function () {
-            alert("Gagal mendapatkan lokasi 😢");
-          }
-        );
-      } else {
-        alert("Browser kamu tidak mendukung geolocation 😔");
-      }
-    </script>
-  </body>
+    // Kalau ada koordinat dari URL, update map-nya
+    if (!isNaN(lat) && !isNaN(lng)) {
+      map.setView([lat, lng], 15);
+      L.marker([lat, lng]).addTo(map)
+        .bindPopup("Lokasimu dari Thunkable 📍").openPopup();
+    } else {
+      alert("Koordinat tidak ditemukan 😢");
+    }
+  </script>
+</body>
 </html>
