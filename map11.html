@@ -3,45 +3,21 @@
 <head>
   <title>StepGo Map Tracker</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <link
-    rel="stylesheet"
-    href="https://unpkg.com/leaflet@1.9.3/dist/leaflet.css"
-  />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.3/dist/leaflet.css" />
   <script src="https://unpkg.com/leaflet@1.9.3/dist/leaflet.js"></script>
   <script src="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.js"></script>
-  <link
-    rel="stylesheet"
-    href="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.css"
-  />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.css" />
+
   <style>
     html, body, #map {
       height: 100%;
       margin: 0;
-    }
-
-    #controls {
-      position: absolute;
-      top: 10px;
-      left: 10px;
-      z-index: 999;
-      background: white;
-      padding: 10px;
-      border-radius: 8px;
-      box-shadow: 0 0 10px rgba(0,0,0,0.3);
-    }
-
-    button {
-      margin-top: 5px;
-      width: 100%;
+      padding: 0;
     }
   </style>
 </head>
 <body>
   <div id="map"></div>
-  <div id="controls">
-    <button onclick="startTracking()">Mulai</button>
-    <button onclick="stopTracking()">Selesai</button>
-  </div>
 
   <script>
     let map = L.map('map').fitWorld();
@@ -51,11 +27,7 @@
       maxZoom: 18
     }).addTo(map);
 
-    L.control
-      .geocoder({
-        defaultMarkGeocode: true
-      })
-      .addTo(map);
+    L.control.geocoder({ defaultMarkGeocode: true }).addTo(map);
 
     map.on('click', function (e) {
       L.popup()
@@ -72,7 +44,7 @@
       watchId = navigator.geolocation.watchPosition(function (position) {
         const latlng = L.latLng(position.coords.latitude, position.coords.longitude);
         if (lastLatLng) {
-          totalDistance += latlng.distanceTo(lastLatLng); // dalam meter
+          totalDistance += latlng.distanceTo(lastLatLng);
         }
         lastLatLng = latlng;
 
@@ -88,27 +60,22 @@
       navigator.geolocation.clearWatch(watchId);
       const endTime = new Date();
       const totalSeconds = Math.floor((endTime - startTime) / 1000);
-
       const jarak = Math.round(totalDistance);
       const waktu = totalSeconds;
 
-      // Kirim data ke Thunkable: format "jarak|waktu"
-      window.location.href = `thunkable://callback?message=${jarak}|${waktu}`;
+      const result = `${jarak}|${waktu}`;
+      // Kirim balik ke Thunkable
+      window.location.href = `thunkable://callback?data=${result}`;
     }
-  </script>
-</body>
-</html>
-        }
-      })
-      .then(res => res.json())
-      .then(response => {
-        alert("Data berhasil dikirim ke Google Sheets!");
-      })
-      .catch(err => {
-        console.error(err);
-        alert("Gagal mengirim data.");
-      });
-    }
+
+    // Terima pesan dari Thunkable
+    window.addEventListener("message", function (event) {
+      if (event.data === "mulai") {
+        startTracking();
+      } else if (event.data === "selesai") {
+        stopTracking();
+      }
+    });
   </script>
 </body>
 </html>
