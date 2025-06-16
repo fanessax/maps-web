@@ -89,33 +89,15 @@
       const endTime = new Date();
       const totalSeconds = Math.floor((endTime - startTime) / 1000);
 
-      const data = {
-        jarak: Math.round(totalDistance),
-        waktu: totalSeconds
-      };
+      const jarak = Math.round(totalDistance);
+      const waktu = totalSeconds;
 
-      // Ganti URL di sini dengan Web App kamu
-      const URL_WEB_APP_GOOGLE = "https://script.google.com/macros/s/AKfycbxyz123abc456/exec";
-
-      fetch(function stopTracking() {
-  navigator.geolocation.clearWatch(watchId);
-  const endTime = new Date();
-  const totalSeconds = Math.floor((endTime - startTime) / 1000);
-
-  const data = {
-    jarak: Math.round(totalDistance),
-    waktu: totalSeconds
-  };
-
-  // Kirim ke Thunkable
-  const message = JSON.stringify(data);
-  window.location.href = `thunkable://callback?message=${encodeURIComponent(message)}`;
-}
-, {
-        method: 'POST',
-        body: JSON.stringify(data),
-        headers: {
-          'Content-Type': 'application/json'
+      // Kirim data ke Thunkable: format "jarak|waktu"
+      window.location.href = `thunkable://callback?message=${jarak}|${waktu}`;
+    }
+  </script>
+</body>
+</html>
         }
       })
       .then(res => res.json())
