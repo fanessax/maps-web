@@ -1,119 +1,118 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>StepGo Maps</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-  <link rel="stylesheet" href="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.css" />
+  <title>StepGo Map Tracker</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link
+    rel="stylesheet"
+    href="https://unpkg.com/leaflet@1.9.3/dist/leaflet.css"
+  />
+  <script src="https://unpkg.com/leaflet@1.9.3/dist/leaflet.js"></script>
+  <script src="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.js"></script>
+  <link
+    rel="stylesheet"
+    href="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.css"
+  />
   <style>
-    html, body, #map { height: 100%; margin: 0; padding: 0; }
+    html, body, #map {
+      height: 100%;
+      margin: 0;
+    }
+
     #controls {
       position: absolute;
-      top: 10px; left: 10px;
-      z-index: 1000;
+      top: 10px;
+      left: 10px;
+      z-index: 999;
       background: white;
       padding: 10px;
       border-radius: 8px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.3);
+    }
+
+    button {
+      margin-top: 5px;
+      width: 100%;
     }
   </style>
 </head>
 <body>
+  <div id="map"></div>
+  <div id="controls">
+    <button onclick="startTracking()">Mulai</button>
+    <button onclick="stopTracking()">Selesai</button>
+  </div>
 
-<div id="controls">
-  <input type="text" id="searchBox" placeholder="Cari lokasi..." />
-  <button onclick="startTracking()">Mulai</button>
-  <button onclick="stopTracking()">Selesai</button>
-  <p id="info">Jarak: 0 m | Waktu: 0 s</p>
-</div>
-<div id="map"></div>
+  <script>
+    let map = L.map('map').fitWorld();
+    let watchId, startTime, totalDistance = 0, lastLatLng;
 
-<!-- Tambahkan script Leaflet -->
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-<script src="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.js"></script>
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      maxZoom: 18
+    }).addTo(map);
 
-<script>
-  let map = L.map('map').fitWorld();
-  let userMarker = null;
-  let route = [];
-  let polyline = null;
-  let tracking = false;
-  let startTime = null;
-  let distance = 0;
-  let watchId = null;
+    L.control
+      .geocoder({
+        defaultMarkGeocode: true
+      })
+      .addTo(map);
 
-  map.locate({ setView: true, maxZoom: 18 });
+    map.on('click', function (e) {
+      L.popup()
+        .setLatLng(e.latlng)
+        .setContent("Lokasi: " + e.latlng.toString())
+        .openOn(map);
+    });
 
-  function updateUserPosition(e) {
-    const latlng = e.latlng || (e.coords ? L.latLng(e.coords.latitude, e.coords.longitude) : null);
-    if (!latlng) return;
+    function startTracking() {
+      totalDistance = 0;
+      lastLatLng = null;
+      startTime = new Date();
 
-    if (!userMarker) {
-      userMarker = L.marker(latlng).addTo(map).bindPopup("Lokasi Anda").openPopup();
-    } else {
-      userMarker.setLatLng(latlng);
-    }
+      watchId = navigator.geolocation.watchPosition(function (position) {
+        const latlng = L.latLng(position.coords.latitude, position.coords.longitude);
+        if (lastLatLng) {
+          totalDistance += latlng.distanceTo(lastLatLng); // dalam meter
+        }
+        lastLatLng = latlng;
 
-    if (tracking) {
-      if (route.length > 0) {
-        distance += latlng.distanceTo(route[route.length - 1]);
-      }
-      route.push(latlng);
-      if (polyline) polyline.remove();
-      polyline = L.polyline(route, { color: 'blue' }).addTo(map);
-
-      let timeElapsed = Math.floor((Date.now() - startTime) / 1000);
-      document.getElementById('info').innerText =
-        `Jarak: ${distance.toFixed(2)} m | Waktu: ${timeElapsed} s`;
-    }
-  }
-
-  map.on('locationfound', updateUserPosition);
-  map.on('click', e => {
-    L.popup().setLatLng(e.latlng).setContent("Lokasi diklik: " + e.latlng.toString()).openOn(map);
-  });
-
-  L.Control.geocoder().addTo(map);
-
-  function startTracking() {
-    tracking = true;
-    startTime = Date.now();
-    route = [];
-    distance = 0;
-    if (navigator.geolocation) {
-      watchId = navigator.geolocation.watchPosition(updateUserPosition, null, {
-        enableHighAccuracy: true
+        map.setView(latlng, 18);
+        L.circleMarker(latlng, { radius: 5, color: 'blue' }).addTo(map);
+      }, console.error, {
+        enableHighAccuracy: true,
+        maximumAge: 1000
       });
     }
-  }
 
-  function stopTracking() {
-    tracking = false;
-    if (watchId) {
+    function stopTracking() {
       navigator.geolocation.clearWatch(watchId);
-      watchId = null;
+      const endTime = new Date();
+      const totalSeconds = Math.floor((endTime - startTime) / 1000);
+
+      const data = {
+        jarak: Math.round(totalDistance),
+        waktu: totalSeconds
+      };
+
+      // Ganti URL di sini dengan Web App kamu
+      const URL_WEB_APP_GOOGLE = "https://script.google.com/macros/s/AKfycbxyz123abc456/exec";
+
+      fetch(https://script.google.com/macros/s/AKfycbw3rsnwozk929t9jz9v-CfUEJwxCEOyAy4Pg15rt2hmaq7cQbz0IaYh0Zhl0jFj3558/exec, {
+        method: 'POST',
+        body: JSON.stringify(data),
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      })
+      .then(res => res.json())
+      .then(response => {
+        alert("Data berhasil dikirim ke Google Sheets!");
+      })
+      .catch(err => {
+        console.error(err);
+        alert("Gagal mengirim data.");
+      });
     }
-
-    const totalTime = Math.floor((Date.now() - startTime) / 1000);
-    const data = {
-      waktu: totalTime,
-      jarak: distance.toFixed(2)
-    };
-
-    document.getElementById('info').innerText =
-      `Total: ${data.jarak} m | ${data.waktu} s`;
-
-    // Simpan ke Google Sheets
-    fetch('https://htthttps://script.google.com/macros/s/AKfycbyHYfi31mzzOltCVYY0mnqLrza6aRVpfGDgQbd-Ol7RnuNweIAOZZqToaUbN5-NWRz2/execps://script.google.com/mahttps://script.google.com/macros/s/AKhttps://script.google.com/macros/s/AKfycbymSH0E-j25q1-2cIgVMSqMp8ygDP-Qq_7wnXbHNHho-OunH9MjqrZHNhIi_vziO3J3/exechttps://script.google.com/macros/s/AKfycbyHYfi31mzzOltCVYY0mnqLrza6aRVpfGDgQbd-Ol7RnuNweIAOZZqToaUbN5-NWRz2/execfycbw2x2NWXPGvGHjkrRAUlP76yi2wvDfR60faoKBpaZXtlvWZp2qGOuDn7ktwNQm05ctp/execcros/s/AKfycbw2x2NWXPGvGHjkrRAUlP76yi2wvDfR60faoKBpaZXtlvWZp2qGOuDn7ktwNQm05ctp/exec
-.google.com/macros/s/YOUR_SCRIPT_ID/exehttps://script.google.com/macros/s/AKfycby7VDaTKcd818rUHOIcJZKUFTTznZbzX5X4bo1HIsaUistqUtT822X8vj258msQAqsd/exec
-    c', {
-      method: 'POST',
-      body: JSON.stringify(data),
-      headers: { 'Content-Type': 'application/json' }
-    })
-    .then(res => res.text())
-    .then(res => alert("Data berhasil disimpan!"))
-    .catch(err => alert("Gagal menyimpan data: " + err));
-  }
-</script>
+  </script>
 </body>
 </html>
