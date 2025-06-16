@@ -97,7 +97,21 @@
       // Ganti URL di sini dengan Web App kamu
       const URL_WEB_APP_GOOGLE = "https://script.google.com/macros/s/AKfycbxyz123abc456/exec";
 
-      fetch(https://script.google.com/macros/s/AKfycbw3rsnwozk929t9jz9v-CfUEJwxCEOyAy4Pg15rt2hmaq7cQbz0IaYh0Zhl0jFj3558/exec, {
+      fetch(function stopTracking() {
+  navigator.geolocation.clearWatch(watchId);
+  const endTime = new Date();
+  const totalSeconds = Math.floor((endTime - startTime) / 1000);
+
+  const data = {
+    jarak: Math.round(totalDistance),
+    waktu: totalSeconds
+  };
+
+  // Kirim ke Thunkable
+  const message = JSON.stringify(data);
+  window.location.href = `thunkable://callback?message=${encodeURIComponent(message)}`;
+}
+, {
         method: 'POST',
         body: JSON.stringify(data),
         headers: {
