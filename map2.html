@@ -1,87 +1,25 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Leaflet - Lokasi dan Pencarian</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <link
-    rel="stylesheet"
-    href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
-  />
-  <style>
-    #map {
-      height: 100vh;
-      width: 100vw;
-    }
-  </style>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 </head>
 <body>
-  <div id="map"></div>
+  <div id="map" style="height:100vh;"></div>
 
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script>
-    let map = L.map("map").setView([0, 0], 13);
-
-    // Tambahkan peta dasar (OpenStreetMap)
-    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-      maxZoom: 19,
-    }).addTo(map);
-
-    // Marker lokasi pengguna
-    let userMarker = null;
-
-    // Deteksi lokasi pengguna
-    map.locate({ setView: true, maxZoom: 16, watch: false });
-
-    map.on("locationfound", (e) => {
-      if (userMarker) {
-        userMarker.setLatLng(e.latlng);
-      } else {
-        userMarker = L.marker(e.latlng).addTo(map).bindPopup("Lokasi Kamu").openPopup();
-      }
+    let map = L.map("map").setView([0,0],2);
+    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png").addTo(map);
+    
+    // Deteksi lokasi
+    map.locate({ setView: true, maxZoom: 16 }).on('locationfound', function(e) {
+      L.marker(e.latlng).addTo(map).bindPopup("Saya di sini").openPopup();
+    }).on('locationerror', function() {
+      alert('Gagal deteksi lokasi');
     });
 
-    map.on("locationerror", () => {
-      alert("Gagal mendeteksi lokasi.");
-    });
-
-    // Marker tujuan pencarian
-    let tujuanMarker = null;
-
-    // Terima pesan dari Thunkable
-    window.addEventListener("message", function (event) {
-      try {
-        const data = JSON.parse(event.data);
-
-        if (data.type === "cariTempat") {
-          const query = data.query;
-
-          // Gunakan API Geocoding (Nominatim)
-          fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}`)
-            .then(response => response.json())
-            .then(results => {
-              if (results && results.length > 0) {
-                const lat = parseFloat(results[0].lat);
-                const lon = parseFloat(results[0].lon);
-
-                if (tujuanMarker) {
-                  tujuanMarker.setLatLng([lat, lon]);
-                } else {
-                  tujuanMarker = L.marker([lat, lon])
-                    .addTo(map)
-                    .bindPopup(query)
-                    .openPopup();
-                }
-
-                map.setView([lat, lon], 16);
-              } else {
-                alert("Lokasi tidak ditemukan");
-              }
-            });
-        }
-      } catch (err) {
-        console.log("Data tidak valid:", err);
-      }
-    });
+    document.body.innerHTML = ''; // buat debugging, hapus saja
   </script>
 </body>
 </html>
