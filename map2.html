@@ -35,7 +35,10 @@
       if (userMarker) {
         userMarker.setLatLng(e.latlng);
       } else {
-        userMarker = L.marker(e.latlng).addTo(map).bindPopup("Lokasi Kamu").openPopup();
+        userMarker = L.marker(e.latlng)
+          .addTo(map)
+          .bindPopup("Lokasi Kamu")
+          .openPopup();
       }
     });
 
@@ -43,12 +46,16 @@
       alert("Gagal mendeteksi lokasi.");
     });
 
+   
     window.addEventListener("message", function (event) {
+      console.log("✅ Dapat pesan dari Thunkable:", event.data); // DEBUG LOG
+
       try {
         const data = JSON.parse(event.data);
 
         if (data.type === "cariTempat") {
           const query = data.query;
+          console.log("🔍 Pencarian lokasi:", query); // DEBUG LOG
 
           fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}`)
             .then(response => response.json())
@@ -68,12 +75,12 @@
 
                 map.setView([lat, lon], 16);
               } else {
-                alert("Lokasi tidak ditemukan");
+                alert("❌ Lokasi tidak ditemukan");
               }
             });
         }
       } catch (err) {
-        console.log("Data tidak valid:", err);
+        console.log("❗ Data tidak valid:", err);
       }
     });
   </script>
