@@ -1,46 +1,70 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Lokasiku dari Thunkable</title>
+  <title>Leaflet - Lokasi dan Tujuan</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <style>
-    html, body, #map {
-      height: 100%;
-      margin: 0;
-      padding: 0;
-    }
+    #map { height: 100vh; width: 100vw; }
   </style>
-  <link
-    rel="stylesheet"
-    href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
-  />
-  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 </head>
 <body>
   <div id="map"></div>
 
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script>
-    // Ambil parameter dari URL
-    const urlParams = new URLSearchParams(window.location.search);
-    const lat = parseFloat(urlParams.get('lat'));
-    const lng = parseFloat(urlParams.get('lng'));
+    let map = L.map("map").setView([0, 0], 13); // default awal
 
-    // Buat map
-    const map = L.map("map").setView([0, 0], 2); // default view
-
-    // Tambahkan tile
+    // Tambahkan tile (background peta)
     L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-      attribution: '&copy; OpenStreetMap contributors'
+      maxZoom: 19,
     }).addTo(map);
 
-    // Kalau ada koordinat dari URL, update map-nya
-    if (!isNaN(lat) && !isNaN(lng)) {
-      map.setView([lat, lng], 15);
-      L.marker([lat, lng]).addTo(map)
-        .bindPopup("Lokasimu dari Thunkable 📍").openPopup();
-    } else {
-      alert("Koordinat tidak ditemukan 😢");
-    }
+    // Marker lokasi pengguna
+    let userMarker = null;
+
+    // Deteksi lokasi pengguna
+    map.locate({ setView: true, maxZoom: 16, watch: false });
+
+    map.on("locationfound", (e) => {
+      if (userMarker) {
+        userMarker.setLatLng(e.latlng);
+      } else {
+        userMarker = L.marker(e.latlng).addTo(map).bindPopup("Lokasi Kamu").openPopup();
+      }
+    });
+
+    map.on("locationerror", () => {
+      alert("Gagal mendeteksi lokasi");
+    });
+
+    // Marker tujuan dari Thunkable
+    let tujuanMarker = null;
+
+    // Terima data dari Thunkable
+    window.addEventListener("message", function (event) {
+      try {
+        const data = JSON.parse(event.data);
+        if (data.type === "cariLokasi") {
+          const lat = parseFloat(data.lat);
+          const lng = parseFloat(data.lng);
+
+          if (!isNaN(lat) && !isNaN(lng)) {
+            if (tujuanMarker) {
+              tujuanMarker.setLatLng([lat, lng]);
+            } else {
+              tujuanMarker = L.marker([lat, lng], { icon: L.icon({ iconUrl: "https://cdn-icons-png.flaticon.com/512/684/684908.png", iconSize: [32, 32] }) })
+                .addTo(map)
+                .bindPopup("Lokasi Tujuan")
+                .openPopup();
+            }
+            map.setView([lat, lng], 16);
+          }
+        }
+      } catch (err) {
+        console.log("Data tidak valid:", err);
+      }
+    });
   </script>
 </body>
 </html>
