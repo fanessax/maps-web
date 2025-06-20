@@ -1,11 +1,17 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Leaflet - Lokasi dan Tujuan</title>
+  <title>Leaflet - Lokasi dan Pencarian</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <link
+    rel="stylesheet"
+    href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+  />
   <style>
-    #map { height: 100vh; width: 100vw; }
+    #map {
+      height: 100vh;
+      width: 100vw;
+    }
   </style>
 </head>
 <body>
@@ -13,9 +19,9 @@
 
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script>
-    let map = L.map("map").setView([0, 0], 13); // default awal
+    let map = L.map("map").setView([0, 0], 13);
 
-    // Tambahkan tile (background peta)
+    // Tambahkan peta dasar (OpenStreetMap)
     L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
       maxZoom: 19,
     }).addTo(map);
@@ -35,31 +41,42 @@
     });
 
     map.on("locationerror", () => {
-      alert("Gagal mendeteksi lokasi");
+      alert("Gagal mendeteksi lokasi.");
     });
 
-    // Marker tujuan dari Thunkable
+    // Marker tujuan pencarian
     let tujuanMarker = null;
 
-    // Terima data dari Thunkable
+    // Terima pesan dari Thunkable
     window.addEventListener("message", function (event) {
       try {
         const data = JSON.parse(event.data);
-        if (data.type === "cariLokasi") {
-          const lat = parseFloat(data.lat);
-          const lng = parseFloat(data.lng);
 
-          if (!isNaN(lat) && !isNaN(lng)) {
-            if (tujuanMarker) {
-              tujuanMarker.setLatLng([lat, lng]);
-            } else {
-              tujuanMarker = L.marker([lat, lng], { icon: L.icon({ iconUrl: "https://cdn-icons-png.flaticon.com/512/684/684908.png", iconSize: [32, 32] }) })
-                .addTo(map)
-                .bindPopup("Lokasi Tujuan")
-                .openPopup();
-            }
-            map.setView([lat, lng], 16);
-          }
+        if (data.type === "cariTempat") {
+          const query = data.query;
+
+          // Gunakan API Geocoding (Nominatim)
+          fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}`)
+            .then(response => response.json())
+            .then(results => {
+              if (results && results.length > 0) {
+                const lat = parseFloat(results[0].lat);
+                const lon = parseFloat(results[0].lon);
+
+                if (tujuanMarker) {
+                  tujuanMarker.setLatLng([lat, lon]);
+                } else {
+                  tujuanMarker = L.marker([lat, lon])
+                    .addTo(map)
+                    .bindPopup(query)
+                    .openPopup();
+                }
+
+                map.setView([lat, lon], 16);
+              } else {
+                alert("Lokasi tidak ditemukan");
+              }
+            });
         }
       } catch (err) {
         console.log("Data tidak valid:", err);
