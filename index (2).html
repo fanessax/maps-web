@@ -1,0 +1,100 @@
+
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Feed Lari</title>
+  <link href="https://fonts.googleapis.com/css2?family=Merriweather&display=swap" rel="stylesheet" />
+  <style>
+    body {
+      font-family: 'Merriweather', serif;
+      background-color: #ebe5db;
+      color: #2d3f4e;
+      margin: 0;
+      padding: 0;
+    }
+    header {
+      background-color: #2d3f4e;
+      color: #ebe5db;
+      padding: 1rem;
+      text-align: center;
+    }
+    main {
+      padding: 1rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+      align-items: center;
+    }
+    .post {
+      background-color: #ffffff;
+      color: #2d3f4e;
+      border-radius: 10px;
+      padding: 1rem;
+      width: 90%;
+      max-width: 500px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    }
+    .post h4 {
+      margin-top: 0;
+      color: #2d3f4e;
+    }
+    footer {
+      margin-top: 2rem;
+      text-align: center;
+      font-size: 0.8rem;
+      color: #555;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Feed Lari</h1>
+    <p>Hasil lari kamu akan tampil di sini 🎽</p>
+  </header>
+  <main id="feed"></main>
+  <footer>&copy; 2025 Pelacak Lari by Fanessa</footer>
+
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyBIzkM9rhyaaFzz-8OBAVOraw0cj5g3KEg",
+      authDomain: "login-26ea8.firebaseapp.com",
+      databaseURL: "https://login-26ea8-default-rtdb.firebaseio.com",
+      projectId: "login-26ea8",
+      storageBucket: "login-26ea8.firebasestorage.app",
+      messagingSenderId: "680566684700",
+      appId: "1:680566684700:web:07e818aad42648cc6bb3d9",
+      measurementId: "G-FV3F98JYW8"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+    const feed = document.getElementById("feed");
+
+    db.ref("riwayat").once("value", (snapshot) => {
+      const data = snapshot.val();
+      if (!data) {
+        const info = document.createElement("p");
+        info.innerText = "Belum ada riwayat lari disimpan.";
+        feed.appendChild(info);
+      } else {
+        const records = Object.values(data).reverse();
+        records.forEach((r) => {
+          const card = document.createElement("div");
+          card.className = "post";
+          card.innerHTML = `
+            <h4>${r.tanggal}</h4>
+            <p>Jarak: <strong>${r.jarak} meter</strong></p>
+            <p>Waktu: <strong>${r.waktu}</strong></p>
+            <p>Kecepatan: <strong>${r.kecepatan} km/jam</strong></p>
+          `;
+          feed.appendChild(card);
+        });
+      }
+    });
+  </script>
+</body>
+</html>
