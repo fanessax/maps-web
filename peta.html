@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Peta Lokasi Saya</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.css" />
+  <style>
+    html, body {
+      height: 100%;
+      margin: 0;
+      font-family: sans-serif;
+    }
+    #map {
+      height: 100vh;
+    }
+    #recenterBtn {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      z-index: 1000;
+      background-color: #2d3f4e;
+      color: #ebe5db;
+      border: none;
+      padding: 10px 15px;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <button id="recenterBtn">📍 Lokasi Saya</button>
+  <div id="map"></div>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.js"></script>
+  <script>
+    const map = L.map('map').setView([-7.57, 110.82], 13);
+
+    // Tambahkan layer peta
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: 'Map data © <a href="https://openstreetmap.org">OpenStreetMap</a> contributors'
+    }).addTo(map);
+
+    // Tambahkan kontrol pencarian lokasi
+    L.Control.geocoder({
+      defaultMarkGeocode: true
+    }).addTo(map);
+
+    let marker;
+
+    function deteksiLokasi() {
+      if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(
+          (pos) => {
+            const lat = pos.coords.latitude;
+            const lng = pos.coords.longitude;
+            const myPos = [lat, lng];
+            map.setView(myPos, 16);
+            if (marker) {
+              marker.setLatLng(myPos);
+            } else {
+              marker = L.marker(myPos).addTo(map).bindPopup("📍 Lokasi Kamu").openPopup();
+            }
+          },
+          (err) => {
+            alert("Gagal mendapatkan lokasi: " + err.message);
+          },
+          { enableHighAccuracy: true }
+        );
+      } else {
+        alert("Browser kamu tidak mendukung Geolocation.");
+      }
+    }
+
+    // Tombol Lokasi Saya
+    document.getElementById("recenterBtn").addEventListener("click", deteksiLokasi);
+
+    // Deteksi lokasi langsung saat halaman dibuka
+    deteksiLokasi();
+  </script>
+</body>
+</html>
